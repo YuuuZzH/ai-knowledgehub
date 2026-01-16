@@ -9,27 +9,27 @@ import lombok.NoArgsConstructor;
 
 import java.time.LocalDateTime;
 
+/**
+ * @author yuuu
+ */
 @Data
-@TableName("users")
+@TableName("embedding_versions")
 @AllArgsConstructor
 @NoArgsConstructor
-public class User {
+public class EmbeddingVersion {
+
     @TableId(type = IdType.AUTO)
     private Integer id;
-    
-    private String username;
-    
-    private String email;
-    
-    private String password;
-    
-    private String role;
-    
-    private String avatar;
-    
-    private LocalDateTime lastLogin;
-    
+
+    private String modelName;
+
+    private Integer dimension;
+
+    private Integer chunkSize;
+
+    private Integer chunkOverlap;
+
+    private Boolean isActive;
+
     private LocalDateTime createdAt;
-    
-    private LocalDateTime updatedAt;
 }

@@ -7,6 +7,9 @@ import lombok.Data;
 
 import java.time.LocalDateTime;
 
+/**
+ * @author yuuu
+ */
 @Data
 @TableName("knowledge_bases")
 public class KnowledgeBase {

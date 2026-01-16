@@ -1,10 +1,13 @@
-package online.yuuu.aiknowledgehub.config;
+package online.yuuu.aiknowledgehub.config.mp;
 
 import com.baomidou.mybatisplus.extension.plugins.MybatisPlusInterceptor;
 import com.baomidou.mybatisplus.extension.plugins.inner.PaginationInnerInterceptor;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 
+/**
+ * @author yuuu
+ */
 @Configuration
 public class MybatisPlusConfig {
 

@@ -1,4 +1,65 @@
+spring:
+  application:
+    name: ai-knowledgehub
+  datasource:
+    driver-class-name: org.postgresql.Driver
+    url: jdbc:postgresql://localhost:5432/ai_kb
+    username: postgres
+    password: postgres
+  servlet:
+    multipart:
+      enabled: true
+      max-file-size: 10MB
+      max-request-size: 10MB
+
+server:
+  port: 8999
+
 ollama:
   base-url: http://localhost:11434
-  embedding-model: nomic-embed-text
-  chat-model: deepseek-llm:7b
+
+  embedding:
+    model: nomic-embed-text
+    dimension: 768
+
+  chat:
+    model: deepseek-llm:7b
+    temperature: 0.2
+    max-tokens: 1024
+
+rag:
+  chunk:
+    size: 512
+    overlap: 64
+
+  retrieval:
+    top-k: 5
+    score-threshold: 0.3
+
+  prompt-template: |
+    你是企业内部知识助手，请严格基于以下内容回答问题：
+    {context}
+    问题：{question}
+
+vector:
+  distance-metric: cosine
+  index-type: hnsw
+
+mybatis-plus:
+  configuration:
+    map-underscore-to-camel-case: true
+  global-config:
+    db-config:
+      logic-delete-field: deleted
+      logic-delete-value: 1
+      not-delete-value: 0
+
+
+file:
+  upload:
+    path: ./uploads
+
+logging:
+  level:
+    online.yuuu.aiknowledgehub: debug
+    org.springframework.web: debug

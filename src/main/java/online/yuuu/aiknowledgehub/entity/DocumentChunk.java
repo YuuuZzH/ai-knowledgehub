@@ -9,27 +9,36 @@ import lombok.NoArgsConstructor;
 
 import java.time.LocalDateTime;
 
+/**
+ * @author yuuu
+ */
 @Data
-@TableName("users")
+@TableName("document_chunks")
 @AllArgsConstructor
 @NoArgsConstructor
-public class User {
+public class DocumentChunk {
+
     @TableId(type = IdType.AUTO)
-    private Integer id;
-    
-    private String username;
-    
-    private String email;
-    
-    private String password;
-    
-    private String role;
-    
-    private String avatar;
-    
-    private LocalDateTime lastLogin;
-    
+    private Long id;
+
+    private Integer knowledgeBaseId;
+
+    private Integer documentId;
+
+    private String content; // 切片文本
+
+    /**
+     * 向量字段
+     * pgvector：VECTOR(768)
+     */
+    private String embedding;
+
+    private Integer tokenCount;
+
+    private Integer chunkIndex;
+
     private LocalDateTime createdAt;
-    
-    private LocalDateTime updatedAt;
+
+    private Integer embeddingVersionId;
+
 }

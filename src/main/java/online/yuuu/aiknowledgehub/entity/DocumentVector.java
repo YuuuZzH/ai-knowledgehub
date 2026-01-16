@@ -9,27 +9,23 @@ import lombok.NoArgsConstructor;
 
 import java.time.LocalDateTime;
 
+/**
+ * @author yuuu
+ */
 @Data
-@TableName("users")
+@TableName("document_vectors")
 @AllArgsConstructor
 @NoArgsConstructor
-public class User {
+public class DocumentVector {
+
     @TableId(type = IdType.AUTO)
-    private Integer id;
-    
-    private String username;
-    
-    private String email;
-    
-    private String password;
-    
-    private String role;
-    
-    private String avatar;
-    
-    private LocalDateTime lastLogin;
-    
+    private Long id;
+
+    private Long chunkId;
+
+    private Integer knowledgeBaseId;
+
+    private String embedding; // pgvector 类型
+
     private LocalDateTime createdAt;
-    
-    private LocalDateTime updatedAt;
 }

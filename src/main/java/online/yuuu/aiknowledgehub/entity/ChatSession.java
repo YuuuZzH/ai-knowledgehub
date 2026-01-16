@@ -9,27 +9,23 @@ import lombok.NoArgsConstructor;
 
 import java.time.LocalDateTime;
 
+/**
+ * @author yuuu
+ */
 @Data
-@TableName("users")
+@TableName("chat_sessions")
 @AllArgsConstructor
 @NoArgsConstructor
-public class User {
+public class ChatSession {
+
     @TableId(type = IdType.AUTO)
-    private Integer id;
-    
-    private String username;
-    
-    private String email;
-    
-    private String password;
-    
-    private String role;
-    
-    private String avatar;
-    
-    private LocalDateTime lastLogin;
-    
+    private Long id;
+
+    private Integer userId;
+
+    private Integer knowledgeBaseId;
+
+    private String title;
+
     private LocalDateTime createdAt;
-    
-    private LocalDateTime updatedAt;
 }
