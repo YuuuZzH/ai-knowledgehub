@@ -2,7 +2,6 @@ package online.yuuu.aiknowledgehub.controller;
 
 import online.yuuu.aiknowledgehub.common.Result;
 import online.yuuu.aiknowledgehub.dto.ChatRequest;
-import online.yuuu.aiknowledgehub.dto.ChatResponse;
 import online.yuuu.aiknowledgehub.service.IChatService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.web.bind.annotation.*;
@@ -15,7 +14,7 @@ public class ChatController {
     private IChatService chatService;
 
     @PostMapping
-    public Result<ChatResponse> sendMessage(@RequestBody ChatRequest request) {
+    public Result<String> sendMessage(@RequestBody ChatRequest request) {
         return chatService.sendMessage(request);
     }
 

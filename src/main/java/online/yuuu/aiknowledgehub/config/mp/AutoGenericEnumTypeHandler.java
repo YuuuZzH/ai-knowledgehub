@@ -44,11 +44,16 @@ public class AutoGenericEnumTypeHandler<E extends BaseEnum> extends BaseTypeHand
         return null;
         // throw new IllegalArgumentException(enumType.getName() + "  unknown enumerated type  index:" + index);
     }
-
     @Override
     public void setNonNullParameter(PreparedStatement ps, int i, E parameter, JdbcType jdbcType) throws SQLException {
-        //int!
-        ps.setObject(i, parameter.getValue());
+        Object value = parameter.getValue();
+        if (value instanceof Integer) {
+            ps.setInt(i, (Integer) value);
+        } else if (value instanceof String) {
+            ps.setString(i, (String) value);
+        } else {
+            ps.setObject(i, value);
+        }
     }
 
     @Override

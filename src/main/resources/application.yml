@@ -48,6 +48,8 @@ vector:
 mybatis-plus:
   configuration:
     map-underscore-to-camel-case: true
+    default-enum-type-handler: online.yuuu.aiknowledgehub.config.mp.AutoGenericEnumTypeHandler
+  type-handlers-package: online.yuuu.aiknowledgehub.config.mp
   global-config:
     db-config:
       logic-delete-field: deleted
@@ -57,7 +59,7 @@ mybatis-plus:
 
 file:
   upload:
-    path: ./uploads
+    path: D:/maven-space/ai-knowledgehub/uploads
 
 logging:
   level:

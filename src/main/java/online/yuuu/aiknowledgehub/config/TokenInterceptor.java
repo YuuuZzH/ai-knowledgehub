@@ -1,8 +1,8 @@
 package online.yuuu.aiknowledgehub.config;
 
+import jakarta.annotation.Resource;
 import online.yuuu.aiknowledgehub.common.Result;
 import com.fasterxml.jackson.databind.ObjectMapper;
-import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
 import org.springframework.web.servlet.HandlerInterceptor;
 
@@ -12,7 +12,7 @@ import jakarta.servlet.http.HttpServletResponse;
 @Component
 public class TokenInterceptor implements HandlerInterceptor {
 
-    @Autowired
+    @Resource
     private TokenUtil tokenUtil;
 
     @Override

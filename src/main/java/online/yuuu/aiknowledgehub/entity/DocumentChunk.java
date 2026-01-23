@@ -28,10 +28,9 @@ public class DocumentChunk {
     private String content; // 切片文本
 
     /**
-     * 向量字段
-     * pgvector：VECTOR(768)
+     * pgvector 向量字段
      */
-    private String embedding;
+    private Object embedding;
 
     private Integer tokenCount;
 

@@ -1,35 +1,105 @@
 package online.yuuu.aiknowledgehub.service.impl;
 
+import lombok.RequiredArgsConstructor;
 import online.yuuu.aiknowledgehub.common.Result;
 import online.yuuu.aiknowledgehub.dto.ChatRequest;
-import online.yuuu.aiknowledgehub.dto.ChatResponse;
+import online.yuuu.aiknowledgehub.entity.ChatMessage;
+import online.yuuu.aiknowledgehub.entity.ChatSession;
+import online.yuuu.aiknowledgehub.mapper.ChatMessageMapper;
+import online.yuuu.aiknowledgehub.mapper.ChatSessionMapper;
+import online.yuuu.aiknowledgehub.ollma.OllamaChatClient;
 import online.yuuu.aiknowledgehub.service.IChatService;
 import org.springframework.stereotype.Service;
 
-import java.time.LocalDateTime;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Map;
 import java.util.UUID;
 
+/**
+ * @author yuuu
+ */
 @Service
+@RequiredArgsConstructor
 public class ChatServiceImpl implements IChatService {
 
+
+    private final ChatSessionMapper sessionMapper;
+    private final ChatMessageMapper messageMapper;
+    private final RagQueryService ragQueryService;
+    private final OllamaChatClient chatClient;
+
+    private static final int HISTORY_LIMIT = 10;
+
     @Override
-    public Result<ChatResponse> sendMessage(ChatRequest request) {
-        // 这里应该实现实际的聊天逻辑
-        // 1. 根据knowledgeBaseId获取相关知识库内容
-        // 2. 使用大模型结合知识库内容生成回答
-        // 3. 返回带来源的响应
-        
-        // 模拟响应
-        ChatResponse response = new ChatResponse();
-        response.setId(UUID.randomUUID().toString());
-        response.setContent("这是AI助手的回答。在实际实现中，这里会调用大模型API并结合知识库内容生成回答。");
-        response.setSessionId(request.getSessionId() != null ? request.getSessionId() : UUID.randomUUID().toString());
-        response.setSources(List.of("相关文档1", "相关文档2"));
-        response.setTimestamp(LocalDateTime.now().toString());
-        
-        return Result.success(response);
+    public Result<String> sendMessage(ChatRequest request) {
+        Integer userId = request.getUserId();
+        Integer knowledgeBaseId = request.getKnowledgeBaseId();
+        Long sessionId = request.getSessionId();
+        String message = request.getMessage();
+        // 1️⃣ session 处理
+        ChatSession session = getOrCreateSession(userId, knowledgeBaseId, sessionId);
+
+        // 2️⃣ 保存 user 消息
+        saveMessage(session.getId(), ChatMessage.Role.USER, message);
+
+        // 3️⃣ RAG prompt（只负责知识）
+        String ragPrompt = ragQueryService.buildRagPrompt(
+                knowledgeBaseId, message
+        );
+
+        // 4️⃣ 历史对话
+        List<ChatMessage> history =
+                messageMapper.selectRecentMessages(session.getId(), HISTORY_LIMIT);
+
+        List<Map<String, String>> messages = new ArrayList<>();
+
+        // system（知识约束）
+        messages.add(Map.of(
+                "role", "system",
+                "content", ragPrompt
+        ));
+
+        // history
+        for (ChatMessage msg : history) {
+            messages.add(Map.of(
+                    "role", msg.getRole().name(),
+                    "content", msg.getContent()
+            ));
+        }
+
+        // 5️⃣ 调用 LLM
+        String answer = chatClient.chat(messages);
+
+        // 6️⃣ 保存 assistant 消息
+        saveMessage(session.getId(), ChatMessage.Role.ASSISTANT, answer);
+
+        return Result.success(answer);
+    }
+
+    private ChatSession getOrCreateSession(
+            Integer userId,
+            Integer knowledgeBaseId,
+            Long sessionId
+    ) {
+        if (sessionId != null) {
+            return sessionMapper.selectById(sessionId);
+        }
+
+        ChatSession session = new ChatSession();
+        session.setUserId(userId);
+        session.setKnowledgeBaseId(knowledgeBaseId);
+        session.setTitle("新对话");
+        sessionMapper.insert(session);
+        return session;
+    }
+
+    private void saveMessage(Long sessionId, ChatMessage.Role role, String content) {
+        ChatMessage msg = new ChatMessage();
+        msg.setSessionId(sessionId);
+        msg.setRole(role);
+        msg.setContent(content);
+        messageMapper.insert(msg);
     }
 
     @Override

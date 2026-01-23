@@ -28,6 +28,19 @@ export const useUserStore = defineStore('user', () => {
     }
   }
 
+  // 检查认证状态
+  const checkAuthStatus = () => {
+    const storedToken = localStorage.getItem('access_token')
+    if (storedToken) {
+      token.value = storedToken
+      isAuthenticated.value = true
+      // 这取用户信息
+      fetchCurrentUser()
+    } else {
+      isAuthenticated.value = false
+    }
+  }
+
   // 注册
   const register = async (username: string, email: string, password: string) => {
     try {
@@ -85,6 +98,7 @@ export const useUserStore = defineStore('user', () => {
     register,
     fetchCurrentUser,
     logout,
-    updateProfile
+    updateProfile,
+    checkAuthStatus
   }
 })

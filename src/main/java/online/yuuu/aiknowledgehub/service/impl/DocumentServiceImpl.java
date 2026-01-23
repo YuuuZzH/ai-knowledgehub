@@ -1,17 +1,25 @@
 package online.yuuu.aiknowledgehub.service.impl;
 
 import com.baomidou.mybatisplus.core.conditions.query.QueryWrapper;
+import lombok.RequiredArgsConstructor;
 import online.yuuu.aiknowledgehub.common.Result;
 import online.yuuu.aiknowledgehub.entity.Document;
+import online.yuuu.aiknowledgehub.entity.DocumentProcessTask;
 import online.yuuu.aiknowledgehub.entity.KnowledgeBase;
 import online.yuuu.aiknowledgehub.mapper.DocumentMapper;
+import online.yuuu.aiknowledgehub.mapper.DocumentProcessTaskMapper;
 import online.yuuu.aiknowledgehub.mapper.KnowledgeBaseMapper;
 import online.yuuu.aiknowledgehub.service.IDocumentService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
+import org.springframework.transaction.support.TransactionSynchronization;
+import org.springframework.transaction.support.TransactionSynchronizationAdapter;
+import org.springframework.transaction.support.TransactionSynchronizationManager;
 import org.springframework.web.multipart.MultipartFile;
 
+import java.io.File;
 import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Path;
@@ -21,15 +29,18 @@ import java.util.List;
 import java.util.UUID;
 
 @Service
+@RequiredArgsConstructor
 public class DocumentServiceImpl implements IDocumentService {
 
-    @Autowired
-    private DocumentMapper documentMapper;
-    
-    @Autowired
-    private KnowledgeBaseMapper knowledgeBaseMapper;
+    private final DocumentMapper documentMapper;
 
-    @Value("${file.upload.path:./uploads}")
+    private final KnowledgeBaseMapper knowledgeBaseMapper;
+
+    private final DocumentProcessTaskMapper taskMapper;
+
+    private final DocumentIngestWorker ingestService;
+
+    @Value("${file.upload.path}")
     private String uploadPath;
 
     @Override
@@ -51,6 +62,7 @@ public class DocumentServiceImpl implements IDocumentService {
     }
 
     @Override
+    @Transactional
     public Result<Document> uploadDocument(MultipartFile file, Integer knowledgeBaseId) {
         // 验证知识库是否存在
         KnowledgeBase knowledgeBase = knowledgeBaseMapper.selectById(knowledgeBaseId);
@@ -87,7 +99,7 @@ public class DocumentServiceImpl implements IDocumentService {
             document.setFilename(fileName);
             document.setSize(file.getSize());
             document.setKnowledgeBaseId(knowledgeBaseId);
-            document.setStatus("uploading"); // 初始状态为上传中
+            document.setStatus(Document.DocumentStatus.UPLOADING);
             document.setFilePath(filePath.toString());
             document.setUploadDate(LocalDateTime.now());
             document.setCreatedAt(LocalDateTime.now());
@@ -95,12 +107,26 @@ public class DocumentServiceImpl implements IDocumentService {
 
             documentMapper.insert(document);
 
-            // 启动文档处理任务
-            processDocument(document.getId());
-
+            // 创建文档处理任务
+            DocumentProcessTask task = new DocumentProcessTask();
+            task.setDocumentId(document.getId());
+            task.setKnowledgeBaseId(knowledgeBaseId);
+            task.setTaskType(DocumentProcessTask.TaskType.INGEST);
+            task.setStatus(DocumentProcessTask.TaskStatus.PENDING);
+            taskMapper.insert(task);
+            // 提交后再异步
+            TransactionSynchronizationManager.registerSynchronization(
+                    new TransactionSynchronization() {
+                        @Override
+                        public void afterCommit() {
+                            ingestService.process(task.getId());
+                        }
+                    }
+            );
             return Result.success(document);
         } catch (IOException e) {
-            return Result.error("文件上传失败: " + e.getMessage());
+            e.printStackTrace();
+            return Result.error("文件上传失败");
         }
     }
 
@@ -124,41 +150,6 @@ public class DocumentServiceImpl implements IDocumentService {
         documentMapper.deleteById(id);
 
         return Result.success("文档删除成功", null);
-    }
-
-    @Override
-    public Result<Void> processDocument(Integer documentId) {
-        // 这里应该启动一个异步任务来处理文档
-        // 包括：解析文档内容、分片、向量化、存储到向量数据库等
-        
-        Document document = documentMapper.selectById(documentId);
-        if (document == null) {
-            return Result.error("文档不存在");
-        }
-
-        // 更新状态为处理中
-        document.setStatus("processing");
-        document.setUpdatedAt(LocalDateTime.now());
-        documentMapper.updateById(document);
-
-        // 模拟文档处理过程（实际实现中这里会涉及文档解析、向量化等复杂操作）
-        try {
-            // 这里应该调用文档解析和向量化服务
-            Thread.sleep(2000); // 模拟处理时间
-
-            // 更新状态为已完成
-            document.setStatus("completed");
-            document.setUpdatedAt(LocalDateTime.now());
-            documentMapper.updateById(document);
-        } catch (Exception e) {
-            // 更新状态为失败
-            document.setStatus("failed");
-            document.setUpdatedAt(LocalDateTime.now());
-            documentMapper.updateById(document);
-            return Result.error("文档处理失败: " + e.getMessage());
-        }
-
-        return Result.success("文档处理完成", null);
     }
 
     /**

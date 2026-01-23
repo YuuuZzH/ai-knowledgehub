@@ -14,6 +14,4 @@ public interface IDocumentService {
     Result<Document> uploadDocument(MultipartFile file, Integer knowledgeBaseId);
     
     Result<Void> deleteDocument(Integer id);
-    
-    Result<Void> processDocument(Integer documentId);
 }

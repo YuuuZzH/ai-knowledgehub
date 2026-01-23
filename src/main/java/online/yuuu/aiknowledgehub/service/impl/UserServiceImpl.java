@@ -71,7 +71,7 @@ public class UserServiceImpl implements IUserService {
         user.setUsername(request.getUsername());
         user.setEmail(request.getEmail());
         user.setPassword(BCrypt.hashpw(request.getPassword(), BCrypt.gensalt()));
-        user.setRole("user"); // 默认角色
+        user.setRole(User.Role.USER); // 默认角色
         user.setCreatedAt(LocalDateTime.now());
         user.setUpdatedAt(LocalDateTime.now());
 
