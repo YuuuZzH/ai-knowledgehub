@@ -23,7 +23,7 @@ ollama:
     dimension: 768
 
   chat:
-    model: deepseek-llm:7b
+    model: deepseek-r1:1.5b
     temperature: 0.2
     max-tokens: 1024
 

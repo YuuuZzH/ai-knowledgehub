@@ -2,6 +2,18 @@
 <!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd" >
 <mapper namespace="online.yuuu.aiknowledgehub.mapper.DocumentChunkMapper">
 
+    <select id="searchTopK" resultType="online.yuuu.aiknowledgehub.dto.ChunkScoreDTO">
+        <![CDATA[
+        SELECT
+            id,
+            content,
+            1 - (embedding <=> #{embedding, typeHandler=online.yuuu.aiknowledgehub.config.mp.PgVectorTypeHandler}) AS score
+        FROM document_chunks
+        WHERE knowledge_base_id = #{kbId}
+        ORDER BY embedding <=> #{embedding, typeHandler=online.yuuu.aiknowledgehub.config.mp.PgVectorTypeHandler}
+        LIMIT #{topK}
+        ]]>
+    </select>
 
 
 </mapper>

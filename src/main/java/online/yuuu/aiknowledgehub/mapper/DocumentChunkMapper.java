@@ -14,16 +14,7 @@ import java.util.List;
  */
 @Mapper
 public interface DocumentChunkMapper extends BaseMapper<DocumentChunk> {
-    @Select("""
-        SELECT
-            id,
-            content,
-            1 - (embedding <=> #{embedding}) AS score
-        FROM document_chunks
-        WHERE knowledge_base_id = #{kbId}
-        ORDER BY embedding <=> #{embedding}
-        LIMIT #{topK}
-    """)
+
     List<ChunkScoreDTO> searchTopK(
             @Param("embedding") Object embedding,
             @Param("kbId") Integer knowledgeBaseId,
